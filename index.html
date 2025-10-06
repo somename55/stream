@@ -161,14 +161,23 @@
 
             call.on('stream', (remoteStream) => {
                 console.log('Received stream');
+                console.log('Stream tracks:', remoteStream.getTracks());
+                console.log('Video tracks:', remoteStream.getVideoTracks());
+                console.log('Audio tracks:', remoteStream.getAudioTracks());
+
                 const videoElement = document.getElementById('remoteVideo');
                 videoElement.srcObject = remoteStream;
 
-                // Force play in case autoplay is blocked
-                videoElement.play().catch(err => {
-                    console.log('Autoplay blocked, user needs to click play:', err);
-                    alert('Stream received! Click the play button on the video if it doesn\'t start automatically.');
-                });
+                // Wait for metadata to load, then play
+                videoElement.onloadedmetadata = () => {
+                    console.log('Metadata loaded, attempting to play...');
+                    videoElement.play().then(() => {
+                        console.log('Playing successfully!');
+                    }).catch(err => {
+                        console.log('Autoplay blocked:', err);
+                        alert('Stream received! Click the play button to start.');
+                    });
+                };
             });
 
             call.on('error', (err) => {
