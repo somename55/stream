@@ -93,13 +93,21 @@
 
         async function startBroadcasting() {
             try {
-                // Get webcam stream
+                // Get webcam stream with specific constraints
                 localStream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
                     audio: true
                 });
 
-                document.getElementById('localVideo').srcObject = localStream;
+                console.log('Local stream tracks:', localStream.getTracks());
+                console.log('Video tracks:', localStream.getVideoTracks());
+                console.log('Audio tracks:', localStream.getAudioTracks());
+
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = localStream;
 
                 // Create peer with random ID
                 peer = new Peer();
@@ -109,11 +117,13 @@
                     document.getElementById('broadcasterSection').style.display = 'block';
                     document.getElementById('viewerSection').style.display = 'none';
                     console.log('My peer ID is: ' + id);
+                    console.log('Broadcasting stream with tracks:', localStream.getTracks().length);
                 });
 
                 // Answer incoming calls
                 peer.on('call', (call) => {
                     console.log('Incoming call, answering with stream');
+                    console.log('Sending tracks:', localStream.getTracks());
                     call.answer(localStream);
                 });
 
