@@ -149,8 +149,15 @@
                 return;
             }
 
+            // Create a silent audio track for the viewer (required for WebRTC)
+            const audioContext = new AudioContext();
+            const oscillator = audioContext.createOscillator();
+            const dst = oscillator.connect(audioContext.createMediaStreamDestination());
+            oscillator.start();
+            const dummyStream = dst.stream;
+
             console.log('Calling peer:', remotePeerId);
-            const call = peer.call(remotePeerId, new MediaStream());
+            const call = peer.call(remotePeerId, dummyStream);
 
             call.on('stream', (remoteStream) => {
                 console.log('Received stream');
