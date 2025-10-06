@@ -79,7 +79,7 @@
             <input type="text" id="peerIdInput" placeholder="Enter broadcaster's Peer ID">
             <button id="connectBtn">Connect</button>
         </div>
-        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="remoteVideo" autoplay playsinline controls></video>
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
@@ -161,7 +161,14 @@
 
             call.on('stream', (remoteStream) => {
                 console.log('Received stream');
-                document.getElementById('remoteVideo').srcObject = remoteStream;
+                const videoElement = document.getElementById('remoteVideo');
+                videoElement.srcObject = remoteStream;
+
+                // Force play in case autoplay is blocked
+                videoElement.play().catch(err => {
+                    console.log('Autoplay blocked, user needs to click play:', err);
+                    alert('Stream received! Click the play button on the video if it doesn\'t start automatically.');
+                });
             });
 
             call.on('error', (err) => {
