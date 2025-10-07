@@ -1,0 +1,27 @@
+# Netlify Build Configuration for WebRTC Streaming App
+
+[build]
+  # No build process needed - pure static HTML/JS
+  publish = "."
+
+  # Command to run (none needed for static site)
+  command = ""
+
+# Custom headers for WebRTC and media access
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Essential for getUserMedia API
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=()"
+    Feature-Policy = "camera 'self'; microphone 'self'; geolocation 'none'"
+
+    # CSP allowing PeerJS CDN and WebRTC connections
+    # Added: data: to media-src for Web Audio API, img-src, frame-ancestors
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://*.peerjs.com wss://*.peerjs.com; style-src 'self' 'unsafe-inline'; media-src 'self' blob: data:; img-src 'self' data: blob:; worker-src 'self' blob:; frame-ancestors 'self'"
+
+    # Security headers
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
