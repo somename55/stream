@@ -109,8 +109,16 @@
                 const localVideo = document.getElementById('localVideo');
                 localVideo.srcObject = localStream;
 
-                // Create peer with random ID
-                peer = new Peer();
+                // Create peer with random ID and config for better video quality
+                peer = new Peer({
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' }
+                        ],
+                        sdpSemantics: 'unified-plan'
+                    }
+                });
 
                 peer.on('open', (id) => {
                     document.getElementById('peerId').textContent = id;
@@ -163,7 +171,15 @@
             document.getElementById('broadcasterSection').style.display = 'none';
 
             if (!peer) {
-                peer = new Peer();
+                peer = new Peer({
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' }
+                        ],
+                        sdpSemantics: 'unified-plan'
+                    }
+                });
                 peer.on('error', (err) => {
                     console.error('Peer error:', err);
                     alert('Error: ' + err.type);
@@ -195,12 +211,30 @@
                 console.log('Video tracks:', remoteStream.getVideoTracks());
                 console.log('Audio tracks:', remoteStream.getAudioTracks());
 
+                // Check if video tracks exist and are enabled
+                const videoTracks = remoteStream.getVideoTracks();
+                if (videoTracks.length === 0) {
+                    console.error('NO VIDEO TRACKS RECEIVED!');
+                    alert('Warning: No video track received, only audio');
+                } else {
+                    videoTracks.forEach(track => {
+                        console.log('Video track details:', {
+                            id: track.id,
+                            enabled: track.enabled,
+                            muted: track.muted,
+                            readyState: track.readyState,
+                            settings: track.getSettings()
+                        });
+                    });
+                }
+
                 const videoElement = document.getElementById('remoteVideo');
                 videoElement.srcObject = remoteStream;
 
                 // Wait for metadata to load, then play
                 videoElement.onloadedmetadata = () => {
                     console.log('Metadata loaded, attempting to play...');
+                    console.log('Video dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
                     videoElement.play().then(() => {
                         console.log('Playing successfully!');
                     }).catch(err => {
