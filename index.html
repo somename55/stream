@@ -187,7 +187,7 @@
             }
         }
 
-        function connectToStream() {
+        async function connectToStream() {
             const remotePeerId = document.getElementById('peerIdInput').value.trim();
 
             if (!remotePeerId) {
@@ -195,14 +195,31 @@
                 return;
             }
 
-            // Create a silent audio track for the viewer (required for WebRTC)
+            // Create dummy stream with both audio AND video
+            // This ensures WebRTC negotiates for both tracks
+            const canvas = document.createElement('canvas');
+            canvas.width = 640;
+            canvas.height = 480;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const dummyVideoStream = canvas.captureStream();
+
             const audioContext = new AudioContext();
             const oscillator = audioContext.createOscillator();
             const dst = oscillator.connect(audioContext.createMediaStreamDestination());
             oscillator.start();
-            const dummyStream = dst.stream;
+            const dummyAudioTrack = dst.stream.getAudioTracks()[0];
+
+            // Combine audio and video tracks
+            const dummyStream = new MediaStream([
+                ...dummyVideoStream.getVideoTracks(),
+                dummyAudioTrack
+            ]);
 
             console.log('Calling peer:', remotePeerId);
+            console.log('Dummy stream tracks:', dummyStream.getTracks());
             const call = peer.call(remotePeerId, dummyStream);
 
             call.on('stream', (remoteStream) => {
