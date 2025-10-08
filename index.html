@@ -124,7 +124,27 @@
                 peer.on('call', (call) => {
                     console.log('Incoming call, answering with stream');
                     console.log('Sending tracks:', localStream.getTracks());
+
+                    // Ensure video track is enabled
+                    localStream.getVideoTracks().forEach(track => {
+                        track.enabled = true;
+                        console.log('Video track enabled:', track.id, track.readyState);
+                    });
+
                     call.answer(localStream);
+
+                    // Monitor connection
+                    call.on('stream', (stream) => {
+                        console.log('Connection established, stream flowing');
+                    });
+
+                    call.on('close', () => {
+                        console.log('Call closed');
+                    });
+
+                    call.on('error', (err) => {
+                        console.error('Call error:', err);
+                    });
                 });
 
                 peer.on('error', (err) => {
