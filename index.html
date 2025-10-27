@@ -97,7 +97,10 @@
     </div>
 
     <div class="arduino-control">
-        <h3>Arduino Dual LED Control</h3>
+        <h3>Arduino LED Control (Optional)</h3>
+        <p style="font-size: 14px; color: #666; margin: 10px 0;">
+            Webcam streaming works without Arduino. Connect Arduino for LED control features.
+        </p>
 
         <div style="margin: 15px 0; padding: 10px; background: #e9ecef; border-radius: 4px;">
             <label for="backendUrlInput" style="display: block; margin-bottom: 5px; font-weight: bold;">Arduino Server URL:</label>
@@ -111,7 +114,7 @@
 
         <p>
             <span class="status disconnected" id="connectionStatus"></span>
-            <span id="statusText">Disconnected</span>
+            <span id="statusText">Not Connected</span>
         </p>
 
         <div style="margin: 15px 0;">
@@ -226,6 +229,9 @@
         // Check status every 5 seconds
         connectionCheckInterval = setInterval(checkArduinoConnection, 5000);
 
+        let consecutiveFailures = 0;
+        const MAX_FAILURES_BEFORE_QUIET = 3;
+
         async function checkArduinoConnection() {
             try {
                 const response = await fetch(`${BACKEND_URL}/arduino/status`);
@@ -233,8 +239,13 @@
 
                 isArduinoConnected = data.connected;
                 updateArduinoStatus(data.connected);
+                consecutiveFailures = 0; // Reset on success
             } catch (error) {
-                console.error('Failed to check Arduino status:', error);
+                // Only log first 3 failures to avoid console spam
+                if (consecutiveFailures < MAX_FAILURES_BEFORE_QUIET) {
+                    console.log('Arduino server not available (this is OK - webcam still works)');
+                    consecutiveFailures++;
+                }
                 isArduinoConnected = false;
                 updateArduinoStatus(false);
             }
