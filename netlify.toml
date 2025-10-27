@@ -7,15 +7,33 @@
   # Command to run (none needed for static site)
   command = ""
 
-# Custom headers for WebRTC and media access
+# Headers for clean webcam streaming (index.html)
 [[headers]]
-  for = "/*"
+  for = "/index.html"
   [headers.values]
     # Essential for getUserMedia API
     Permissions-Policy = "camera=(self), microphone=(self), geolocation=()"
 
     # CSP allowing PeerJS CDN and WebRTC connections
-    # Added: data: to media-src for Web Audio API, img-src, frame-ancestors
+    # Added: data: to media-src for Web Audio API
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://*.peerjs.com wss://*.peerjs.com; style-src 'self' 'unsafe-inline'; media-src 'self' blob: data:; img-src 'self' data: blob:; worker-src 'self' blob:; frame-ancestors 'self'"
+
+# Headers for Arduino version (index-arduino.html)
+[[headers]]
+  for = "/index-arduino.html"
+  [headers.values]
+    # Essential for getUserMedia API
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=()"
+
+    # CSP allowing PeerJS, WebRTC, and Arduino backend connections
+    # Added: http: https: to connect-src for Arduino backend on any URL
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://*.peerjs.com wss://*.peerjs.com http: https:; style-src 'self' 'unsafe-inline'; media-src 'self' blob: data:; img-src 'self' data: blob:; worker-src 'self' blob:; frame-ancestors 'self'"
+
+# Default headers for root path (use clean version)
+[[headers]]
+  for = "/"
+  [headers.values]
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=()"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://*.peerjs.com wss://*.peerjs.com; style-src 'self' 'unsafe-inline'; media-src 'self' blob: data:; img-src 'self' data: blob:; worker-src 'self' blob:; frame-ancestors 'self'"
 
     # Security headers

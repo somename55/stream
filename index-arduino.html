@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webcam Stream</title>
+    <title>Webcam Stream + Arduino Control</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -34,11 +34,35 @@
         button:hover {
             background: #0056b3;
         }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
         .info {
             background: white;
             padding: 15px;
             border-radius: 8px;
             margin: 20px 0;
+        }
+        .arduino-control {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status.connected {
+            background: #28a745;
+        }
+        .status.disconnected {
+            background: #dc3545;
         }
         #peerId {
             font-family: monospace;
@@ -57,11 +81,57 @@
     </style>
 </head>
 <body>
-    <h1>Webcam Live Stream</h1>
+    <h1>Webcam Stream + Arduino Control</h1>
 
     <div class="controls">
         <button id="broadcasterBtn">Start Broadcasting</button>
         <button id="viewerBtn">View Stream</button>
+    </div>
+
+    <div class="arduino-control">
+        <h3>Arduino LED Control (Optional)</h3>
+        <p style="font-size: 14px; color: #666; margin: 10px 0;">
+            Webcam streaming works without Arduino. Connect only if you want LED control.
+        </p>
+
+        <div style="margin: 15px 0; padding: 10px; background: #e9ecef; border-radius: 4px;">
+            <label for="backendUrlInput" style="display: block; margin-bottom: 5px; font-weight: bold;">Arduino Server URL:</label>
+            <input type="text" id="backendUrlInput" placeholder="http://localhost:3000"
+                   style="width: 70%; padding: 8px; margin-right: 5px;" value="http://localhost:3000">
+            <button id="connectBackendBtn" style="padding: 8px 15px;">Connect</button>
+            <p style="font-size: 12px; margin: 5px 0 0 0; color: #666;">
+                Enter the Arduino server URL (e.g., http://192.168.1.100:3000 or ngrok URL)
+            </p>
+        </div>
+
+        <p>
+            <span class="status disconnected" id="connectionStatus"></span>
+            <span id="statusText">Not Connected</span>
+        </p>
+
+        <div style="margin: 15px 0;">
+            <h4 style="margin: 10px 0;">Red LED (Pin 13)</h4>
+            <button id="redOnBtn" style="background: #dc3545;">Turn Red ON</button>
+            <button id="redOffBtn" style="background: #6c757d;">Turn Red OFF</button>
+        </div>
+
+        <div style="margin: 15px 0;">
+            <h4 style="margin: 10px 0;">Blue LED (Pin 12)</h4>
+            <button id="blueOnBtn" style="background: #007bff;">Turn Blue ON</button>
+            <button id="blueOffBtn" style="background: #6c757d;">Turn Blue OFF</button>
+        </div>
+
+        <div style="margin: 15px 0;">
+            <h4 style="margin: 10px 0;">Both LEDs</h4>
+            <button id="allOnBtn" style="background: #28a745;">Turn Both ON</button>
+            <button id="allOffBtn" style="background: #6c757d;">Turn Both OFF</button>
+        </div>
+
+        <div style="margin: 15px 0;">
+            <h4 style="margin: 10px 0;">Alternate Mode</h4>
+            <button id="alternateStartBtn" style="background: #ffc107; color: #000;">Start Alternating</button>
+            <button id="alternateStopBtn" style="background: #dc3545;">Stop Alternating</button>
+        </div>
     </div>
 
     <div id="broadcasterSection" style="display:none;">
@@ -87,9 +157,140 @@
         let peer;
         let localStream;
 
+        // Arduino control variables
+        let BACKEND_URL = localStorage.getItem('arduinoBackendUrl') || 'http://localhost:3000';
+        let isArduinoConnected = false;
+        let connectionCheckInterval;
+        let consecutiveFailures = 0;
+        const MAX_FAILURES_BEFORE_QUIET = 3;
+
+        // Load saved URL into input field
+        document.getElementById('backendUrlInput').value = BACKEND_URL;
+
         document.getElementById('broadcasterBtn').addEventListener('click', startBroadcasting);
         document.getElementById('viewerBtn').addEventListener('click', showViewerSection);
         document.getElementById('connectBtn').addEventListener('click', connectToStream);
+
+        // Backend URL configuration
+        document.getElementById('connectBackendBtn').addEventListener('click', connectToBackend);
+
+        // Dual LED control event listeners
+        document.getElementById('redOnBtn').addEventListener('click', () => controlLED('red/on'));
+        document.getElementById('redOffBtn').addEventListener('click', () => controlLED('red/off'));
+        document.getElementById('blueOnBtn').addEventListener('click', () => controlLED('blue/on'));
+        document.getElementById('blueOffBtn').addEventListener('click', () => controlLED('blue/off'));
+        document.getElementById('allOnBtn').addEventListener('click', () => controlLED('all/on'));
+        document.getElementById('allOffBtn').addEventListener('click', () => controlLED('all/off'));
+        document.getElementById('alternateStartBtn').addEventListener('click', () => controlLED('alternate/start'));
+        document.getElementById('alternateStopBtn').addEventListener('click', () => controlLED('alternate/stop'));
+
+        // Function to connect to backend
+        function connectToBackend() {
+            const inputUrl = document.getElementById('backendUrlInput').value.trim();
+            if (!inputUrl) {
+                alert('Please enter a backend URL');
+                return;
+            }
+
+            // Remove trailing slash if present
+            BACKEND_URL = inputUrl.replace(/\/$/, '');
+
+            // Save to localStorage
+            localStorage.setItem('arduinoBackendUrl', BACKEND_URL);
+
+            console.log('Connecting to backend:', BACKEND_URL);
+
+            // Stop existing interval
+            if (connectionCheckInterval) {
+                clearInterval(connectionCheckInterval);
+            }
+
+            // Reset failure counter
+            consecutiveFailures = 0;
+
+            // Check connection immediately
+            checkArduinoConnection();
+
+            // Check status every 5 seconds
+            connectionCheckInterval = setInterval(checkArduinoConnection, 5000);
+        }
+
+        // Check Arduino connection status on page load
+        checkArduinoConnection();
+        // Check status every 5 seconds
+        connectionCheckInterval = setInterval(checkArduinoConnection, 5000);
+
+        async function checkArduinoConnection() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/arduino/status`);
+                const data = await response.json();
+
+                isArduinoConnected = data.connected;
+                updateArduinoStatus(data.connected);
+                consecutiveFailures = 0; // Reset on success
+            } catch (error) {
+                // Only log first 3 failures to avoid console spam
+                if (consecutiveFailures < MAX_FAILURES_BEFORE_QUIET) {
+                    console.log('Arduino server not available (this is OK - webcam still works)');
+                    consecutiveFailures++;
+                }
+                isArduinoConnected = false;
+                updateArduinoStatus(false);
+            }
+        }
+
+        function updateArduinoStatus(connected) {
+            const statusElement = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('statusText');
+
+            // Get all control buttons
+            const buttons = [
+                'redOnBtn', 'redOffBtn', 'blueOnBtn', 'blueOffBtn',
+                'allOnBtn', 'allOffBtn', 'alternateStartBtn', 'alternateStopBtn'
+            ];
+
+            if (connected) {
+                statusElement.className = 'status connected';
+                statusText.textContent = 'Connected';
+                buttons.forEach(id => {
+                    document.getElementById(id).disabled = false;
+                });
+            } else {
+                statusElement.className = 'status disconnected';
+                statusText.textContent = 'Not Connected';
+                buttons.forEach(id => {
+                    document.getElementById(id).disabled = true;
+                });
+            }
+        }
+
+        // Generic function to control LEDs
+        async function controlLED(endpoint) {
+            if (!isArduinoConnected) {
+                alert('Arduino is not connected!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/arduino/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log(`LED control success: ${endpoint}`);
+                } else {
+                    alert('Failed to control LED: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error communicating with Arduino:', error);
+                alert('Failed to communicate with Arduino server. Make sure the server is running!');
+            }
+        }
 
         async function startBroadcasting() {
             try {
