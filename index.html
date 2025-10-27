@@ -162,7 +162,12 @@
             <input type="text" id="peerIdInput" placeholder="Enter broadcaster's Peer ID">
             <button id="connectBtn">Connect</button>
         </div>
-        <video id="remoteVideo" autoplay playsinline controls></video>
+        <div style="position: relative;">
+            <video id="remoteVideo" autoplay playsinline controls style="width: 100%; max-width: 640px; background: #000;"></video>
+            <button id="manualPlayBtn" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; padding: 20px 40px; font-size: 24px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 10;">
+                ▶️ CLICK TO PLAY
+            </button>
+        </div>
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
@@ -488,15 +493,39 @@
                 const videoElement = document.getElementById('remoteVideo');
                 videoElement.srcObject = remoteStream;
 
+                // Make video visible immediately
+                videoElement.style.display = 'block';
+                videoElement.style.width = '100%';
+                videoElement.style.maxWidth = '640px';
+                videoElement.style.background = '#000';
+
+                console.log('✅ Stream connected! Setting up video...');
+
                 // Wait for metadata to load, then play
                 videoElement.onloadedmetadata = () => {
                     console.log('Metadata loaded, attempting to play...');
                     console.log('Video dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+
+                    if (videoElement.videoWidth === 0) {
+                        console.error('⚠️ Video has no dimensions! Stream might not have video track.');
+                        alert('Stream connected but no video! Check if broadcaster allowed camera access.');
+                        return;
+                    }
+
                     videoElement.play().then(() => {
-                        console.log('Playing successfully!');
+                        console.log('✅ Playing successfully!');
+                        document.getElementById('manualPlayBtn').style.display = 'none';
                     }).catch(err => {
                         console.log('Autoplay blocked:', err);
-                        alert('Stream received! Click the play button to start.');
+                        // Show manual play button
+                        const playBtn = document.getElementById('manualPlayBtn');
+                        playBtn.style.display = 'block';
+                        playBtn.onclick = () => {
+                            videoElement.play().then(() => {
+                                playBtn.style.display = 'none';
+                                console.log('✅ Manual play successful!');
+                            });
+                        };
                     });
                 };
             });
