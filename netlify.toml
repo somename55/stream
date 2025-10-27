@@ -13,13 +13,10 @@
   [headers.values]
     # Essential for getUserMedia API
     Permissions-Policy = "camera=(self), microphone=(self), geolocation=()"
-    Feature-Policy = "camera 'self'; microphone 'self'; geolocation 'none'"
 
-    # CSP allowing PeerJS CDN, WebRTC connections, and Arduino backend
+    # CSP allowing PeerJS CDN and WebRTC connections
     # Added: data: to media-src for Web Audio API, img-src, frame-ancestors
-    # Added: * to connect-src to allow Arduino backend on any URL (localhost, ngrok, custom domain)
-    # Added: font-src data: to allow embedded fonts, style-src-elem to allow Google Fonts
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://*.peerjs.com wss://*.peerjs.com http: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' blob: data:; img-src 'self' data: blob:; worker-src 'self' blob:; frame-ancestors 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://*.peerjs.com wss://*.peerjs.com; style-src 'self' 'unsafe-inline'; media-src 'self' blob: data:; img-src 'self' data: blob:; worker-src 'self' blob:; frame-ancestors 'self'"
 
     # Security headers
     X-Frame-Options = "SAMEORIGIN"
