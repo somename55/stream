@@ -1,94 +1,311 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webcam Stream</title>
+    <title>Webcam Stream - Techniek College Rotterdam</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef3 100%);
+            min-height: 100vh;
             padding: 20px;
-            background: #f5f5f5;
         }
-        video {
-            width: 100%;
-            max-width: 640px;
-            background: #000;
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: #006445;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 100, 69, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .arduino-link {
+            background: #B0BD36;
+            color: #006445;
+            padding: 12px 24px;
             border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
+
+        .arduino-link:hover {
+            background: #c5d04a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(176, 189, 54, 0.3);
+        }
+
+        /* Main Card */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        /* Controls */
         .controls {
-            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
         }
+
         button {
-            padding: 10px 20px;
+            padding: 16px 32px;
             font-size: 16px;
-            margin: 5px;
+            font-weight: 600;
             cursor: pointer;
             border: none;
-            border-radius: 4px;
-            background: #007bff;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        #broadcasterBtn {
+            background: #006445;
             color: white;
         }
-        button:hover {
-            background: #0056b3;
+
+        #broadcasterBtn:hover {
+            background: #004d33;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 100, 69, 0.3);
         }
+
+        #viewerBtn {
+            background: #B0BD36;
+            color: #006445;
+        }
+
+        #viewerBtn:hover {
+            background: #c5d04a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(176, 189, 54, 0.3);
+        }
+
+        /* Info Box */
         .info {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #006445;
         }
+
+        .info h3 {
+            color: #006445;
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .info p {
+            color: #495057;
+            margin: 8px 0;
+        }
+
         #peerId {
-            font-family: monospace;
-            background: #e9ecef;
-            padding: 5px 10px;
-            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
             font-size: 14px;
+            color: #006445;
+            font-weight: 600;
+            border: 2px solid #B0BD36;
+            display: inline-block;
+            margin-top: 8px;
         }
+
+        /* Video */
+        video {
+            width: 100%;
+            max-width: 100%;
+            background: #000;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Input */
         input {
-            padding: 8px;
+            padding: 14px 16px;
+            font-size: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #B0BD36;
+            box-shadow: 0 0 0 3px rgba(176, 189, 54, 0.1);
+        }
+
+        #connectBtn {
+            background: #006445;
+            color: white;
+            padding: 14px 28px;
+            min-width: auto;
+        }
+
+        #connectBtn:hover {
+            background: #004d33;
+        }
+
+        /* Hidden sections */
+        .hidden {
+            display: none;
+        }
+
+        /* Input Group */
+        .input-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: #6c757d;
             font-size: 14px;
-            margin: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        .footer a {
+            color: #006445;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .logo {
+                height: 40px;
+            }
+
+            .card {
+                padding: 24px;
+            }
+
+            button {
+                min-width: 100%;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            input {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Webcam Live Stream</h1>
-
-    <div style="background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-        <p style="margin: 5px 0; font-size: 14px; color: #666;">
-            Want Arduino LED control?
-            <a href="index-arduino.html" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: none; font-weight: bold;">
-                Open Arduino Version →
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="logo.svg" alt="Techniek College Rotterdam" class="logo">
+                <h1>Webcam Live Stream</h1>
+            </div>
+            <a href="index-arduino.html" target="_blank" rel="noopener noreferrer" class="arduino-link">
+                🔌 Arduino Versie →
             </a>
-        </p>
-    </div>
-
-    <div class="controls">
-        <button id="broadcasterBtn">Start Broadcasting</button>
-        <button id="viewerBtn">View Stream</button>
-    </div>
-
-    <div id="broadcasterSection" style="display:none;">
-        <div class="info">
-            <h3>Broadcasting</h3>
-            <p>Your Peer ID: <span id="peerId"></span></p>
-            <p>Share this ID with viewers</p>
         </div>
-        <video id="localVideo" autoplay muted playsinline></video>
-    </div>
 
-    <div id="viewerSection" style="display:none;">
-        <div class="info">
-            <h3>View Stream</h3>
-            <input type="text" id="peerIdInput" placeholder="Enter broadcaster's Peer ID">
-            <button id="connectBtn">Connect</button>
+        <!-- Main Card -->
+        <div class="card">
+            <div class="controls">
+                <button id="broadcasterBtn">📹 Start Uitzending</button>
+                <button id="viewerBtn">👁️ Bekijk Stream</button>
+            </div>
+
+            <!-- Broadcaster Section -->
+            <div id="broadcasterSection" class="hidden">
+                <div class="info">
+                    <h3>✅ Aan het uitzenden</h3>
+                    <p>Jouw Peer ID:</p>
+                    <span id="peerId"></span>
+                    <p style="margin-top: 12px; font-size: 14px;">Deel dit ID met kijkers</p>
+                </div>
+                <video id="localVideo" autoplay muted playsinline></video>
+            </div>
+
+            <!-- Viewer Section -->
+            <div id="viewerSection" class="hidden">
+                <div class="info">
+                    <h3>🔗 Verbinden met stream</h3>
+                    <div class="input-group">
+                        <input type="text" id="peerIdInput" placeholder="Voer Peer ID van uitzender in">
+                        <button id="connectBtn">Verbinden</button>
+                    </div>
+                </div>
+                <video id="remoteVideo" autoplay playsinline controls></video>
+            </div>
         </div>
-        <video id="remoteVideo" autoplay playsinline controls></video>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2025 <a href="https://techniekcollegerotterdam.nl" target="_blank">Techniek College Rotterdam</a></p>
+        </div>
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
@@ -102,38 +319,23 @@
 
         async function startBroadcasting() {
             try {
-                // Get webcam stream with specific constraints
                 localStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } },
                     audio: true
                 });
 
                 console.log('Local stream tracks:', localStream.getTracks());
-                console.log('Video tracks:', localStream.getVideoTracks());
-                console.log('Audio tracks:', localStream.getAudioTracks());
 
                 const localVideo = document.getElementById('localVideo');
                 localVideo.srcObject = localStream;
 
-                // Create peer with random ID and config for better video quality
                 peer = new Peer({
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
                             { urls: 'stun:stun1.l.google.com:19302' },
-                            {
-                                urls: 'turn:openrelay.metered.ca:80',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            },
-                            {
-                                urls: 'turn:openrelay.metered.ca:443',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            }
+                            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+                            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
                         ],
                         sdpSemantics: 'unified-plan'
                     }
@@ -141,18 +343,13 @@
 
                 peer.on('open', (id) => {
                     document.getElementById('peerId').textContent = id;
-                    document.getElementById('broadcasterSection').style.display = 'block';
-                    document.getElementById('viewerSection').style.display = 'none';
+                    document.getElementById('broadcasterSection').classList.remove('hidden');
+                    document.getElementById('viewerSection').classList.add('hidden');
                     console.log('My peer ID is: ' + id);
-                    console.log('Broadcasting stream with tracks:', localStream.getTracks().length);
                 });
 
-                // Answer incoming calls
                 peer.on('call', (call) => {
                     console.log('Incoming call, answering with stream');
-                    console.log('Sending tracks:', localStream.getTracks());
-
-                    // Ensure video track is enabled
                     localStream.getVideoTracks().forEach(track => {
                         track.enabled = true;
                         console.log('Video track enabled:', track.id, track.readyState);
@@ -160,7 +357,6 @@
 
                     call.answer(localStream);
 
-                    // Monitor connection
                     call.on('stream', (stream) => {
                         console.log('Connection established, stream flowing');
                     });
@@ -176,18 +372,18 @@
 
                 peer.on('error', (err) => {
                     console.error('Peer error:', err);
-                    alert('Error: ' + err.type);
+                    alert('Fout: ' + err.type);
                 });
 
             } catch (err) {
                 console.error('Error accessing webcam:', err);
-                alert('Could not access webcam: ' + err.message);
+                alert('Geen toegang tot webcam: ' + err.message);
             }
         }
 
         function showViewerSection() {
-            document.getElementById('viewerSection').style.display = 'block';
-            document.getElementById('broadcasterSection').style.display = 'none';
+            document.getElementById('viewerSection').classList.remove('hidden');
+            document.getElementById('broadcasterSection').classList.add('hidden');
 
             if (!peer) {
                 peer = new Peer({
@@ -195,23 +391,15 @@
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
                             { urls: 'stun:stun1.l.google.com:19302' },
-                            {
-                                urls: 'turn:openrelay.metered.ca:80',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            },
-                            {
-                                urls: 'turn:openrelay.metered.ca:443',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            }
+                            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+                            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
                         ],
                         sdpSemantics: 'unified-plan'
                     }
                 });
                 peer.on('error', (err) => {
                     console.error('Peer error:', err);
-                    alert('Error: ' + err.type);
+                    alert('Fout: ' + err.type);
                 });
             }
         }
@@ -220,12 +408,10 @@
             const remotePeerId = document.getElementById('peerIdInput').value.trim();
 
             if (!remotePeerId) {
-                alert('Please enter a Peer ID');
+                alert('Voer een Peer ID in');
                 return;
             }
 
-            // Create dummy stream with both audio AND video
-            // This ensures WebRTC negotiates for both tracks
             const canvas = document.createElement('canvas');
             canvas.width = 640;
             canvas.height = 480;
@@ -241,27 +427,22 @@
             oscillator.start();
             const dummyAudioTrack = dst.stream.getAudioTracks()[0];
 
-            // Combine audio and video tracks
             const dummyStream = new MediaStream([
                 ...dummyVideoStream.getVideoTracks(),
                 dummyAudioTrack
             ]);
 
             console.log('Calling peer:', remotePeerId);
-            console.log('Dummy stream tracks:', dummyStream.getTracks());
             const call = peer.call(remotePeerId, dummyStream);
 
             call.on('stream', (remoteStream) => {
                 console.log('Received stream');
                 console.log('Stream tracks:', remoteStream.getTracks());
-                console.log('Video tracks:', remoteStream.getVideoTracks());
-                console.log('Audio tracks:', remoteStream.getAudioTracks());
 
-                // Check if video tracks exist and are enabled
                 const videoTracks = remoteStream.getVideoTracks();
                 if (videoTracks.length === 0) {
                     console.error('NO VIDEO TRACKS RECEIVED!');
-                    alert('Warning: No video track received, only audio');
+                    alert('Waarschuwing: Geen video ontvangen, alleen audio');
                 } else {
                     videoTracks.forEach(track => {
                         console.log('Video track details:', {
@@ -277,7 +458,6 @@
                 const videoElement = document.getElementById('remoteVideo');
                 videoElement.srcObject = remoteStream;
 
-                // Wait for metadata to load, then play
                 videoElement.onloadedmetadata = () => {
                     console.log('Metadata loaded, attempting to play...');
                     console.log('Video dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
@@ -285,14 +465,14 @@
                         console.log('Playing successfully!');
                     }).catch(err => {
                         console.log('Autoplay blocked:', err);
-                        alert('Stream received! Click the play button to start.');
+                        alert('Stream ontvangen! Klik op de afspeelknop om te starten.');
                     });
                 };
             });
 
             call.on('error', (err) => {
                 console.error('Call error:', err);
-                alert('Could not connect: ' + err.message);
+                alert('Kon niet verbinden: ' + err.message);
             });
         }
     </script>

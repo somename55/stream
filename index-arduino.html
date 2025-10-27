@@ -1,164 +1,575 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webcam Stream + Arduino Control</title>
+    <title>Webcam Stream + Arduino - Techniek College Rotterdam</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef3 100%);
+            min-height: 100vh;
             padding: 20px;
-            background: #f5f5f5;
         }
-        video {
-            width: 100%;
-            max-width: 640px;
-            background: #000;
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: #006445;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 100, 69, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .clean-link {
+            background: #B0BD36;
+            color: #006445;
+            padding: 12px 24px;
             border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .controls {
-            margin: 20px 0;
+
+        .clean-link:hover {
+            background: #c5d04a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(176, 189, 54, 0.3);
         }
-        button {
-            padding: 10px 20px;
+
+        /* Main Card */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .card h2 {
+            color: #006445;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            color: #006445;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        /* Arduino Connection Section */
+        .connection-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #B0BD36;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+
+        .status-dot.disconnected {
+            background: #dc3545;
+        }
+
+        .status-text {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .url-input-group input {
+            flex: 1;
+            min-width: 250px;
+            padding: 14px 16px;
+            font-size: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .url-input-group input:focus {
+            outline: none;
+            border-color: #B0BD36;
+            box-shadow: 0 0 0 3px rgba(176, 189, 54, 0.1);
+        }
+
+        .url-help {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 8px;
+        }
+
+        /* LED Control Sections */
+        .led-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .led-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #006445;
+        }
+
+        .led-section h4 {
+            color: #006445;
             font-size: 16px;
-            margin: 5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .led-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        button {
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
             border: none;
-            border-radius: 4px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        button:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Primary buttons */
+        .btn-primary {
+            background: #006445;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #004d33;
+        }
+
+        .btn-secondary {
+            background: #B0BD36;
+            color: #006445;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #c5d04a;
+        }
+
+        /* LED specific buttons */
+        .btn-red {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-red:hover:not(:disabled) {
+            background: #c82333;
+        }
+
+        .btn-blue {
             background: #007bff;
             color: white;
         }
-        button:hover {
+
+        .btn-blue:hover:not(:disabled) {
             background: #0056b3;
         }
-        button:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-        }
-        .info {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        .arduino-control {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .status {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-        .status.connected {
+
+        .btn-green {
             background: #28a745;
+            color: white;
         }
-        .status.disconnected {
-            background: #dc3545;
+
+        .btn-green:hover:not(:disabled) {
+            background: #218838;
         }
+
+        .btn-yellow {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .btn-yellow:hover:not(:disabled) {
+            background: #e0a800;
+        }
+
+        .btn-gray {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-gray:hover:not(:disabled) {
+            background: #5a6268;
+        }
+
+        /* Stream Controls */
+        .stream-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stream-controls button {
+            flex: 1;
+            min-width: 180px;
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        /* Info Box */
+        .info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #006445;
+        }
+
+        .info h3 {
+            color: #006445;
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .info p {
+            color: #495057;
+            margin: 8px 0;
+        }
+
         #peerId {
-            font-family: monospace;
-            background: #e9ecef;
-            padding: 5px 10px;
-            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
             font-size: 14px;
+            color: #006445;
+            font-weight: 600;
+            border: 2px solid #B0BD36;
+            display: inline-block;
+            margin-top: 8px;
         }
+
+        /* Video */
+        video {
+            width: 100%;
+            max-width: 100%;
+            background: #000;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Input */
         input {
-            padding: 8px;
+            padding: 14px 16px;
+            font-size: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #B0BD36;
+            box-shadow: 0 0 0 3px rgba(176, 189, 54, 0.1);
+        }
+
+        /* Hidden sections */
+        .hidden {
+            display: none;
+        }
+
+        /* Input Group */
+        .input-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .input-group input {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .input-group button {
+            padding: 14px 28px;
+            min-width: auto;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: #6c757d;
             font-size: 14px;
-            margin: 5px;
-            border: 1px solid #ddd;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        .footer a {
+            color: #006445;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Optional Badge */
+        .optional-badge {
+            display: inline-block;
+            background: #B0BD36;
+            color: #006445;
+            padding: 4px 8px;
             border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .logo {
+                height: 40px;
+            }
+
+            .card {
+                padding: 24px;
+            }
+
+            button {
+                min-width: 100%;
+            }
+
+            .stream-controls {
+                flex-direction: column;
+            }
+
+            .stream-controls button {
+                min-width: 100%;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .input-group input {
+                min-width: 100%;
+            }
+
+            .led-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .led-buttons {
+                flex-direction: column;
+            }
+
+            .led-buttons button {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Webcam Stream + Arduino Control</h1>
-
-    <div style="background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-        <p style="margin: 5px 0; font-size: 14px; color: #666;">
-            Don't need Arduino?
-            <a href="index.html" target="_blank" rel="noopener noreferrer" style="color: #28a745; text-decoration: none; font-weight: bold;">
-                ← Open Clean Version
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="logo.svg" alt="Techniek College Rotterdam" class="logo">
+                <h1>Webcam + Arduino Besturing</h1>
+            </div>
+            <a href="index.html" target="_blank" rel="noopener noreferrer" class="clean-link">
+                Basis Versie
             </a>
-        </p>
-    </div>
+        </div>
 
-    <div class="controls">
-        <button id="broadcasterBtn">Start Broadcasting</button>
-        <button id="viewerBtn">View Stream</button>
-    </div>
-
-    <div class="arduino-control">
-        <h3>Arduino LED Control (Optional)</h3>
-        <p style="font-size: 14px; color: #666; margin: 10px 0;">
-            Webcam streaming works without Arduino. Connect only if you want LED control.
-        </p>
-
-        <div style="margin: 15px 0; padding: 10px; background: #e9ecef; border-radius: 4px;">
-            <label for="backendUrlInput" style="display: block; margin-bottom: 5px; font-weight: bold;">Arduino Server URL:</label>
-            <input type="text" id="backendUrlInput" placeholder="http://localhost:3000"
-                   style="width: 70%; padding: 8px; margin-right: 5px;" value="http://localhost:3000">
-            <button id="connectBackendBtn" style="padding: 8px 15px;">Connect</button>
-            <p style="font-size: 12px; margin: 5px 0 0 0; color: #666;">
-                Enter the Arduino server URL (e.g., http://192.168.1.100:3000 or ngrok URL)
+        <!-- Arduino Control Card -->
+        <div class="card">
+            <h2>Arduino LED Besturing <span class="optional-badge">OPTIONEEL</span></h2>
+            <p style="color: #6c757d; margin-bottom: 20px;">
+                Webcam streaming werkt zonder Arduino. Verbind alleen als je LED-besturing wilt gebruiken.
             </p>
+
+            <!-- Connection Section -->
+            <div class="connection-section">
+                <h3>Arduino Server Verbinding</h3>
+                <div class="connection-status">
+                    <div class="status-dot disconnected" id="connectionStatus"></div>
+                    <span class="status-text" id="statusText">Niet Verbonden</span>
+                </div>
+
+                <div class="url-input-group">
+                    <input
+                        type="text"
+                        id="backendUrlInput"
+                        placeholder="http://localhost:3000"
+                        value="http://localhost:3000">
+                    <button id="connectBackendBtn" class="btn-primary">Verbinden</button>
+                </div>
+                <p class="url-help">
+                    Voer het Arduino server URL in (bijv. http://192.168.1.100:3000 of ngrok URL)
+                </p>
+            </div>
+
+            <!-- LED Controls -->
+            <div class="led-controls">
+                <!-- Red LED -->
+                <div class="led-section">
+                    <h4>Rode LED (Pin 13)</h4>
+                    <div class="led-buttons">
+                        <button id="redOnBtn" class="btn-red" disabled>AAN</button>
+                        <button id="redOffBtn" class="btn-gray" disabled>UIT</button>
+                    </div>
+                </div>
+
+                <!-- Blue LED -->
+                <div class="led-section">
+                    <h4>Blauwe LED (Pin 12)</h4>
+                    <div class="led-buttons">
+                        <button id="blueOnBtn" class="btn-blue" disabled>AAN</button>
+                        <button id="blueOffBtn" class="btn-gray" disabled>UIT</button>
+                    </div>
+                </div>
+
+                <!-- Both LEDs -->
+                <div class="led-section">
+                    <h4>Beide LEDs</h4>
+                    <div class="led-buttons">
+                        <button id="allOnBtn" class="btn-green" disabled>Beide AAN</button>
+                        <button id="allOffBtn" class="btn-gray" disabled>Beide UIT</button>
+                    </div>
+                </div>
+
+                <!-- Alternate Mode -->
+                <div class="led-section">
+                    <h4>Afwisselende Modus</h4>
+                    <div class="led-buttons">
+                        <button id="alternateStartBtn" class="btn-yellow" disabled>Start</button>
+                        <button id="alternateStopBtn" class="btn-red" disabled>Stop</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <p>
-            <span class="status disconnected" id="connectionStatus"></span>
-            <span id="statusText">Not Connected</span>
-        </p>
+        <!-- Webcam Stream Card -->
+        <div class="card">
+            <h2>Webcam Live Stream</h2>
+            <div class="stream-controls">
+                <button id="broadcasterBtn" class="btn-primary">Start Uitzending</button>
+                <button id="viewerBtn" class="btn-secondary">Bekijk Stream</button>
+            </div>
 
-        <div style="margin: 15px 0;">
-            <h4 style="margin: 10px 0;">Red LED (Pin 13)</h4>
-            <button id="redOnBtn" style="background: #dc3545;">Turn Red ON</button>
-            <button id="redOffBtn" style="background: #6c757d;">Turn Red OFF</button>
+            <!-- Broadcaster Section -->
+            <div id="broadcasterSection" class="hidden">
+                <div class="info">
+                    <h3>Aan het uitzenden</h3>
+                    <p>Jouw Peer ID:</p>
+                    <span id="peerId"></span>
+                    <p style="margin-top: 12px; font-size: 14px;">Deel dit ID met kijkers</p>
+                </div>
+                <video id="localVideo" autoplay muted playsinline></video>
+            </div>
+
+            <!-- Viewer Section -->
+            <div id="viewerSection" class="hidden">
+                <div class="info">
+                    <h3>Verbinden met stream</h3>
+                    <div class="input-group">
+                        <input type="text" id="peerIdInput" placeholder="Voer Peer ID van uitzender in">
+                        <button id="connectBtn" class="btn-primary">Verbinden</button>
+                    </div>
+                </div>
+                <video id="remoteVideo" autoplay playsinline controls></video>
+            </div>
         </div>
 
-        <div style="margin: 15px 0;">
-            <h4 style="margin: 10px 0;">Blue LED (Pin 12)</h4>
-            <button id="blueOnBtn" style="background: #007bff;">Turn Blue ON</button>
-            <button id="blueOffBtn" style="background: #6c757d;">Turn Blue OFF</button>
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2025 <a href="https://techniekcollegerotterdam.nl" target="_blank">Techniek College Rotterdam</a></p>
         </div>
-
-        <div style="margin: 15px 0;">
-            <h4 style="margin: 10px 0;">Both LEDs</h4>
-            <button id="allOnBtn" style="background: #28a745;">Turn Both ON</button>
-            <button id="allOffBtn" style="background: #6c757d;">Turn Both OFF</button>
-        </div>
-
-        <div style="margin: 15px 0;">
-            <h4 style="margin: 10px 0;">Alternate Mode</h4>
-            <button id="alternateStartBtn" style="background: #ffc107; color: #000;">Start Alternating</button>
-            <button id="alternateStopBtn" style="background: #dc3545;">Stop Alternating</button>
-        </div>
-    </div>
-
-    <div id="broadcasterSection" style="display:none;">
-        <div class="info">
-            <h3>Broadcasting</h3>
-            <p>Your Peer ID: <span id="peerId"></span></p>
-            <p>Share this ID with viewers</p>
-        </div>
-        <video id="localVideo" autoplay muted playsinline></video>
-    </div>
-
-    <div id="viewerSection" style="display:none;">
-        <div class="info">
-            <h3>View Stream</h3>
-            <input type="text" id="peerIdInput" placeholder="Enter broadcaster's Peer ID">
-            <button id="connectBtn">Connect</button>
-        </div>
-        <video id="remoteVideo" autoplay playsinline controls></video>
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
@@ -176,6 +587,7 @@
         // Load saved URL into input field
         document.getElementById('backendUrlInput').value = BACKEND_URL;
 
+        // WebRTC Event Listeners
         document.getElementById('broadcasterBtn').addEventListener('click', startBroadcasting);
         document.getElementById('viewerBtn').addEventListener('click', showViewerSection);
         document.getElementById('connectBtn').addEventListener('click', connectToStream);
@@ -183,7 +595,7 @@
         // Backend URL configuration
         document.getElementById('connectBackendBtn').addEventListener('click', connectToBackend);
 
-        // Dual LED control event listeners
+        // LED control event listeners
         document.getElementById('redOnBtn').addEventListener('click', () => controlLED('red/on'));
         document.getElementById('redOffBtn').addEventListener('click', () => controlLED('red/off'));
         document.getElementById('blueOnBtn').addEventListener('click', () => controlLED('blue/on'));
@@ -197,7 +609,7 @@
         function connectToBackend() {
             const inputUrl = document.getElementById('backendUrlInput').value.trim();
             if (!inputUrl) {
-                alert('Please enter a backend URL');
+                alert('Voer een backend URL in');
                 return;
             }
 
@@ -207,7 +619,9 @@
             // Save to localStorage
             localStorage.setItem('arduinoBackendUrl', BACKEND_URL);
 
-            console.log('Connecting to backend:', BACKEND_URL);
+            if (consecutiveFailures < MAX_FAILURES_BEFORE_QUIET) {
+                console.log('Verbinden met backend:', BACKEND_URL);
+            }
 
             // Stop existing interval
             if (connectionCheckInterval) {
@@ -240,7 +654,7 @@
             } catch (error) {
                 // Only log first 3 failures to avoid console spam
                 if (consecutiveFailures < MAX_FAILURES_BEFORE_QUIET) {
-                    console.log('Arduino server not available (this is OK - webcam still works)');
+                    console.log('Arduino server niet beschikbaar (dit is OK - webcam werkt nog steeds)');
                     consecutiveFailures++;
                 }
                 isArduinoConnected = false;
@@ -259,14 +673,14 @@
             ];
 
             if (connected) {
-                statusElement.className = 'status connected';
-                statusText.textContent = 'Connected';
+                statusElement.className = 'status-dot connected';
+                statusText.textContent = 'Verbonden';
                 buttons.forEach(id => {
                     document.getElementById(id).disabled = false;
                 });
             } else {
-                statusElement.className = 'status disconnected';
-                statusText.textContent = 'Not Connected';
+                statusElement.className = 'status-dot disconnected';
+                statusText.textContent = 'Niet Verbonden';
                 buttons.forEach(id => {
                     document.getElementById(id).disabled = true;
                 });
@@ -276,7 +690,7 @@
         // Generic function to control LEDs
         async function controlLED(endpoint) {
             if (!isArduinoConnected) {
-                alert('Arduino is not connected!');
+                alert('Arduino is niet verbonden!');
                 return;
             }
 
@@ -291,50 +705,39 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    console.log(`LED control success: ${endpoint}`);
+                    if (consecutiveFailures < MAX_FAILURES_BEFORE_QUIET) {
+                        console.log(`LED besturing succesvol: ${endpoint}`);
+                    }
                 } else {
-                    alert('Failed to control LED: ' + data.error);
+                    alert('LED besturing mislukt: ' + data.error);
                 }
             } catch (error) {
-                console.error('Error communicating with Arduino:', error);
-                alert('Failed to communicate with Arduino server. Make sure the server is running!');
+                if (consecutiveFailures < MAX_FAILURES_BEFORE_QUIET) {
+                    console.error('Fout bij communicatie met Arduino:', error);
+                }
+                alert('Communicatie met Arduino server mislukt. Zorg dat de server draait!');
             }
         }
 
         async function startBroadcasting() {
             try {
-                // Get webcam stream with specific constraints
                 localStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } },
                     audio: true
                 });
 
-                console.log('Local stream tracks:', localStream.getTracks());
-                console.log('Video tracks:', localStream.getVideoTracks());
-                console.log('Audio tracks:', localStream.getAudioTracks());
+                console.log('Lokale stream tracks:', localStream.getTracks());
 
                 const localVideo = document.getElementById('localVideo');
                 localVideo.srcObject = localStream;
 
-                // Create peer with random ID and config for better video quality
                 peer = new Peer({
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
                             { urls: 'stun:stun1.l.google.com:19302' },
-                            {
-                                urls: 'turn:openrelay.metered.ca:80',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            },
-                            {
-                                urls: 'turn:openrelay.metered.ca:443',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            }
+                            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+                            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
                         ],
                         sdpSemantics: 'unified-plan'
                     }
@@ -342,53 +745,47 @@
 
                 peer.on('open', (id) => {
                     document.getElementById('peerId').textContent = id;
-                    document.getElementById('broadcasterSection').style.display = 'block';
-                    document.getElementById('viewerSection').style.display = 'none';
-                    console.log('My peer ID is: ' + id);
-                    console.log('Broadcasting stream with tracks:', localStream.getTracks().length);
+                    document.getElementById('broadcasterSection').classList.remove('hidden');
+                    document.getElementById('viewerSection').classList.add('hidden');
+                    console.log('Mijn peer ID is: ' + id);
                 });
 
-                // Answer incoming calls
                 peer.on('call', (call) => {
-                    console.log('Incoming call, answering with stream');
-                    console.log('Sending tracks:', localStream.getTracks());
-
-                    // Ensure video track is enabled
+                    console.log('Inkomende oproep, beantwoorden met stream');
                     localStream.getVideoTracks().forEach(track => {
                         track.enabled = true;
-                        console.log('Video track enabled:', track.id, track.readyState);
+                        console.log('Video track ingeschakeld:', track.id, track.readyState);
                     });
 
                     call.answer(localStream);
 
-                    // Monitor connection
                     call.on('stream', (stream) => {
-                        console.log('Connection established, stream flowing');
+                        console.log('Verbinding tot stand gebracht, stream loopt');
                     });
 
                     call.on('close', () => {
-                        console.log('Call closed');
+                        console.log('Oproep gesloten');
                     });
 
                     call.on('error', (err) => {
-                        console.error('Call error:', err);
+                        console.error('Oproep fout:', err);
                     });
                 });
 
                 peer.on('error', (err) => {
-                    console.error('Peer error:', err);
-                    alert('Error: ' + err.type);
+                    console.error('Peer fout:', err);
+                    alert('Fout: ' + err.type);
                 });
 
             } catch (err) {
-                console.error('Error accessing webcam:', err);
-                alert('Could not access webcam: ' + err.message);
+                console.error('Fout bij toegang tot webcam:', err);
+                alert('Geen toegang tot webcam: ' + err.message);
             }
         }
 
         function showViewerSection() {
-            document.getElementById('viewerSection').style.display = 'block';
-            document.getElementById('broadcasterSection').style.display = 'none';
+            document.getElementById('viewerSection').classList.remove('hidden');
+            document.getElementById('broadcasterSection').classList.add('hidden');
 
             if (!peer) {
                 peer = new Peer({
@@ -396,23 +793,15 @@
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
                             { urls: 'stun:stun1.l.google.com:19302' },
-                            {
-                                urls: 'turn:openrelay.metered.ca:80',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            },
-                            {
-                                urls: 'turn:openrelay.metered.ca:443',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            }
+                            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+                            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
                         ],
                         sdpSemantics: 'unified-plan'
                     }
                 });
                 peer.on('error', (err) => {
-                    console.error('Peer error:', err);
-                    alert('Error: ' + err.type);
+                    console.error('Peer fout:', err);
+                    alert('Fout: ' + err.type);
                 });
             }
         }
@@ -421,12 +810,10 @@
             const remotePeerId = document.getElementById('peerIdInput').value.trim();
 
             if (!remotePeerId) {
-                alert('Please enter a Peer ID');
+                alert('Voer een Peer ID in');
                 return;
             }
 
-            // Create dummy stream with both audio AND video
-            // This ensures WebRTC negotiates for both tracks
             const canvas = document.createElement('canvas');
             canvas.width = 640;
             canvas.height = 480;
@@ -442,27 +829,22 @@
             oscillator.start();
             const dummyAudioTrack = dst.stream.getAudioTracks()[0];
 
-            // Combine audio and video tracks
             const dummyStream = new MediaStream([
                 ...dummyVideoStream.getVideoTracks(),
                 dummyAudioTrack
             ]);
 
-            console.log('Calling peer:', remotePeerId);
-            console.log('Dummy stream tracks:', dummyStream.getTracks());
+            console.log('Peer bellen:', remotePeerId);
             const call = peer.call(remotePeerId, dummyStream);
 
             call.on('stream', (remoteStream) => {
-                console.log('Received stream');
+                console.log('Stream ontvangen');
                 console.log('Stream tracks:', remoteStream.getTracks());
-                console.log('Video tracks:', remoteStream.getVideoTracks());
-                console.log('Audio tracks:', remoteStream.getAudioTracks());
 
-                // Check if video tracks exist and are enabled
                 const videoTracks = remoteStream.getVideoTracks();
                 if (videoTracks.length === 0) {
-                    console.error('NO VIDEO TRACKS RECEIVED!');
-                    alert('Warning: No video track received, only audio');
+                    console.error('GEEN VIDEO TRACKS ONTVANGEN!');
+                    alert('Waarschuwing: Geen video ontvangen, alleen audio');
                 } else {
                     videoTracks.forEach(track => {
                         console.log('Video track details:', {
@@ -478,22 +860,21 @@
                 const videoElement = document.getElementById('remoteVideo');
                 videoElement.srcObject = remoteStream;
 
-                // Wait for metadata to load, then play
                 videoElement.onloadedmetadata = () => {
-                    console.log('Metadata loaded, attempting to play...');
-                    console.log('Video dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+                    console.log('Metadata geladen, proberen af te spelen...');
+                    console.log('Video afmetingen:', videoElement.videoWidth, 'x', videoElement.videoHeight);
                     videoElement.play().then(() => {
-                        console.log('Playing successfully!');
+                        console.log('Succesvol afspelen!');
                     }).catch(err => {
-                        console.log('Autoplay blocked:', err);
-                        alert('Stream received! Click the play button to start.');
+                        console.log('Autoplay geblokkeerd:', err);
+                        alert('Stream ontvangen! Klik op de afspeelknop om te starten.');
                     });
                 };
             });
 
             call.on('error', (err) => {
-                console.error('Call error:', err);
-                alert('Could not connect: ' + err.message);
+                console.error('Oproep fout:', err);
+                alert('Kon niet verbinden: ' + err.message);
             });
         }
     </script>
